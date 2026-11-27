@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Menu, X } from 'lucide-react'
+import { WA } from '../lib/contato.js'
 
 const LINKS = [
   ['#topo', 'Início'],
@@ -12,7 +13,6 @@ const LINKS = [
   ['/owner.html', 'Painel do dono'],
 ]
 
-const WA = 'https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20agendar%20um%20hor%C3%A1rio'
 
 function Logo() {
   return (

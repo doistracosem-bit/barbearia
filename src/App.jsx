@@ -4,8 +4,7 @@ import ScrollIndicator from './components/ScrollIndicator.jsx'
 import Header from './components/Header.jsx'
 import BookingCalendar from './components/BookingCalendar.jsx'
 
-const WA = 'https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20agendar%20um%20hor%C3%A1rio'
-const WA_SIMPLE = 'https://wa.me/5511999999999'
+import { WA, WA_SIMPLE, TEL, TELEFONE_EXIBICAO } from './lib/contato.js'
 
 const SERVICES = [
   ['Corte clássico', 'Máquina e tesoura, acabamento na navalha.', 'R$ 45'],
@@ -200,7 +199,7 @@ export default function App() {
               <Reveal delay={0.12} className="!max-w-none">
                 <h3 className="mb-7 flex items-center gap-2 text-lg font-normal text-white"><Phone size={18} aria-hidden="true" /> Fale com a gente</h3>
                 <p><a className="btn-pill !w-full" href={WA} target="_blank" rel="noopener">Agendar no WhatsApp</a></p>
-                <p className="mt-3.5"><a className="btn-pill !w-full" href="tel:+5511999999999">Ligar: (11) 99999-9999</a></p>
+                <p className="mt-3.5"><a className="btn-pill !w-full" href={TEL}>Ligar: {TELEFONE_EXIBICAO}</a></p>
                 <p className="mt-3 text-xs italic text-white/70">Telefone e WhatsApp de exemplo.</p>
               </Reveal>
             </div>
