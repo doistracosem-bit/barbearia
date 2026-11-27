@@ -11,6 +11,7 @@ import {
   todayKey,
 } from './slots.js'
 import { createRateLimiter, clientIp, normalizeBrPhone, cleanName, cleanService } from './guard.js'
+import { purgeOldBookings, RETENTION_DAYS } from './retention.js'
 
 const PORT = Number(process.env.PORT || 3001)
 const OWNER_TOKEN = process.env.OWNER_TOKEN || '' // sem token => endpoints do dono desabilitados
@@ -263,6 +264,17 @@ const server = createServer(async (req, res) => {
     return json(res, 500, { error: 'internal_error' })
   }
 })
+
+// LGPD (art. 15 e 16): reservas são apagadas RETENTION_DAYS dias depois da data do atendimento.
+// Roda ao iniciar e a cada 6 horas.
+function runPurge() {
+  try {
+    const n = purgeOldBookings()
+    if (n) console.log(`retention: ${n} reserva(s) com mais de ${RETENTION_DAYS} dias apagada(s)`)
+  } catch (err) { console.error('retention failed', err) }
+}
+runPurge()
+setInterval(runPurge, 6 * 60 * 60_000).unref()
 
 server.listen(PORT, () => {
   console.log(`Barbearia API on http://localhost:${PORT}`)
