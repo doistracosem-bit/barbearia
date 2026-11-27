@@ -15,6 +15,8 @@ import {
   startOfDay,
   todayKey,
 } from '../lib/bookings.js'
+import { EMPRESA } from '../lib/empresa.js'
+import { ROTAS_SITE } from '../legal/rotas.js'
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MONTHS = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro']
@@ -38,7 +40,7 @@ function confirmLink(whatsapp, { date, time, name, service }) {
   return `https://wa.me/${whatsapp}?text=${encodeURIComponent(txt)}`
 }
 
-export default function BookingCalendar({ services = [], whatsapp = '' }) {
+export default function BookingCalendar({ services = [], whatsapp = '', rotas = ROTAS_SITE }) {
   const todayK = todayKey()
   const today = keyToDate(todayK) // hoje em Brasília
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
@@ -49,8 +51,8 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
   const [loading, setLoading] = useState(false)
   const [loadedRange, setLoadedRange] = useState(null) // intervalo com dados confirmados do servidor
   const [loadError, setLoadError] = useState(false)
-  const [touched, setTouched] = useState({ name: false, phone: false })
-  const [form, setForm] = useState({ name: '', phone: '', service: services[0]?.[0] || '' })
+  const [touched, setTouched] = useState({ name: false, phone: false, terms: false })
+  const [form, setForm] = useState({ name: '', phone: '', service: services[0]?.[0] || '', terms: false })
   const [status, setStatus] = useState(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -114,11 +116,15 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
     ? 'Informe seu WhatsApp com DDD.'
     : (normalizeBrPhone(form.phone) ? null : 'Use DDD + número, ex.: (11) 91234-5678.')
 
+  const termsCheck = form.terms ? null : 'Marque esta opção para reservar.'
+
   async function onSubmit(e) {
     e.preventDefault()
     if (submitting) return
-    setTouched({ name: true, phone: true })
-    if (nameCheck || phoneCheck) return
+    setTouched({ name: true, phone: true, terms: true })
+    // leva o foco ao primeiro campo com erro (teclado e leitor de tela)
+    const firstErr = nameCheck ? 'bk-name' : phoneCheck ? 'bk-phone' : termsCheck ? 'bk-terms' : null
+    if (firstErr) { document.getElementById(firstErr)?.focus(); return }
     setSubmitting(true); setStatus(null)
     const res = await addBooking({ date: selectedDate, time: selectedTime, name: form.name, phone: form.phone, service: form.service })
     if (res.ok) {
@@ -128,8 +134,8 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
         msg: `Horário reservado: ${formatDay(selectedDate)} às ${selectedTime}. Para confirmar com a barbearia, envie a mensagem pelo WhatsApp.`,
         link: confirmLink(whatsapp, { date: b.date, time: b.time, name: b.name, service: b.service }),
       })
-      setTouched({ name: false, phone: false })
-      setForm((f) => ({ ...f, name: '', phone: '' }))
+      setTouched({ name: false, phone: false, terms: false })
+      setForm((f) => ({ ...f, name: '', phone: '', terms: false }))
       setSelectedTime(null)
       setVersion((v) => v + 1) // recarrega disponibilidade do servidor
     } else {
@@ -142,6 +148,9 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
   const canSubmit = availabilityKnown && !!selectedDate && !!selectedTime && !submitting
   const showNameErr = touched.name && nameCheck
   const showPhoneErr = touched.phone && phoneCheck
+  const showTermsErr = touched.terms && termsCheck
+  const externo = rotas.novaAba ? { target: '_blank', rel: 'noopener' } : {}
+  const novaAba = rotas.novaAba ? <span className="sr-only"> (abre em nova aba)</span> : null
 
   return (
     <div className="mx-auto max-w-[1078px]">
@@ -197,7 +206,7 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
                       <td key={key ?? `e-${week}-${i}`} className="p-0.5">
                         {key ? (
                           <button type="button" disabled={disabled} aria-pressed={isSelected}
-                            aria-label={`${formatDay(key)}${isToday ? ', hoje' : ''}${disabled ? ', indisponível' : ''}`}
+                            aria-label={`${keyToDate(key).getDate()} de ${MONTHS[keyToDate(key).getMonth()]}${isToday ? ', hoje' : ''}${disabled ? ', indisponível' : ''}`}
                             onClick={() => selectDay(key)}
                             className={['aspect-square w-full rounded-none text-sm tabular-nums transition-colors',
                               'focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
@@ -244,30 +253,51 @@ export default function BookingCalendar({ services = [], whatsapp = '' }) {
                 </ul>
               )}
 
+              <p className="mb-2 text-xs text-felt-gray">Campos com * são obrigatórios.</p>
               <div className="space-y-3">
                 <div><label htmlFor="bk-name" className="mb-1 block text-xs text-felt-gray">Nome *</label>
                   <input id="bk-name" name="name" type="text" required maxLength={NAME_MAX} autoComplete="name" value={form.name}
                     aria-invalid={showNameErr ? 'true' : undefined} aria-describedby={showNameErr ? 'bk-name-err' : undefined}
                     onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} onBlur={() => setTouched((t) => ({ ...t, name: true }))}
-                    className={`w-full rounded-none border bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 ${showNameErr ? 'border-black' : 'border-black/20'}`} />
+                    className={`w-full rounded-none border bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 ${showNameErr ? 'border-black' : 'border-black/50'}`} />
                   {showNameErr && <p id="bk-name-err" className="mt-1 text-xs text-inkstone">⚠ {nameCheck}</p>}</div>
                 <div><label htmlFor="bk-phone" className="mb-1 block text-xs text-felt-gray">WhatsApp com DDD *</label>
                   <input id="bk-phone" name="phone" type="tel" required maxLength={20} autoComplete="tel" inputMode="tel" placeholder="(11) 91234-5678" value={form.phone}
                     aria-invalid={showPhoneErr ? 'true' : undefined} aria-describedby={showPhoneErr ? 'bk-phone-err' : undefined}
                     onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))} onBlur={() => setTouched((t) => ({ ...t, phone: true }))}
-                    className={`w-full rounded-none border bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 ${showPhoneErr ? 'border-black' : 'border-black/20'}`} />
+                    className={`w-full rounded-none border bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2 ${showPhoneErr ? 'border-black' : 'border-black/50'}`} />
                   {showPhoneErr && <p id="bk-phone-err" className="mt-1 text-xs text-inkstone">⚠ {phoneCheck}</p>}</div>
                 {services.length > 0 && (
                   <div><label htmlFor="bk-service" className="mb-1 block text-xs text-felt-gray">Serviço</label>
                     <select id="bk-service" name="service" value={form.service} onChange={(e) => setForm((f) => ({ ...f, service: e.target.value }))}
-                      className="w-full rounded-none border border-black/20 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2">
+                      className="w-full rounded-none border border-black/50 bg-white px-3 py-2 text-sm focus-visible:outline focus-visible:outline-2">
                       {services.map(([name]) => <option key={name} value={name}>{name}</option>)}
                     </select></div>
                 )}
               </div>
 
+              <div className="mt-4">
+                <div className="flex items-start gap-3">
+                  <input id="bk-terms" name="terms" type="checkbox" checked={form.terms} required
+                    aria-invalid={showTermsErr ? 'true' : undefined} aria-describedby={showTermsErr ? 'bk-terms-err' : undefined}
+                    onChange={(e) => setForm((f) => ({ ...f, terms: e.target.checked }))}
+                    className="mt-0.5 h-5 w-5 shrink-0 cursor-pointer accent-black" />
+                  <label htmlFor="bk-terms" className="cursor-pointer text-sm leading-snug">
+                    Tenho 18 anos ou mais (ou sou o responsável por quem vai ser atendido) e li os{' '}
+                    <a href={rotas.termos} {...externo} className="underline underline-offset-2">Termos de uso{novaAba}</a>. *
+                  </label>
+                </div>
+                {showTermsErr && <p id="bk-terms-err" className="mt-1 text-xs text-inkstone">⚠ {termsCheck}</p>}
+              </div>
+
+              <p id="bk-privacidade" className="mt-3 text-xs leading-relaxed text-felt-gray">
+                Usamos seu nome e WhatsApp só para este agendamento: confirmar, remarcar ou avisar se algo mudar.
+                Nada de propaganda. A reserva é apagada {EMPRESA.retencaoDias} dias depois do atendimento.
+                Saiba mais na <a href={rotas.privacidade} {...externo} className="underline underline-offset-2">Política de privacidade{novaAba}</a>.
+              </p>
+
               {!selectedTime && slots.length > 0 && <p className="mt-3 text-xs text-felt-gray">Escolha um horário acima.</p>}
-              <button type="submit" disabled={!canSubmit} className="btn-pill mt-5 w-full disabled:cursor-not-allowed disabled:opacity-40">{submitting ? 'Reservando…' : 'Confirmar agendamento'}</button>
+              <button type="submit" disabled={!canSubmit} aria-describedby="bk-privacidade" className="btn-pill mt-5 w-full disabled:cursor-not-allowed disabled:opacity-40">{submitting ? 'Reservando…' : 'Confirmar agendamento'}</button>
             </form>
           )}
 

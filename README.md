@@ -7,7 +7,7 @@ Landing page de uma barbearia (conteúdo **fictício de exemplo**). **HTML/CSS/J
 - **Tailwind CSS v4** (`@tailwindcss/vite`, `@import "tailwindcss"`, `@theme`)
 - **motion** (`motion/react`, `MotionConfig reducedMotion="user"`)
 - **lucide-react** (ícones monocromáticos, `aria-hidden`)
-- Fontes Google **Manrope** (texto) e **Unbounded** (títulos); fallback `system-ui`. Fotos em `src/lib/fotos.js` (null = espaço marcado).
+- Fontes **Manrope** (texto) e **Unbounded** (títulos) servidas pelo próprio site via `@fontsource` (`src/fonts.js`), sem Google Fonts; fallback `system-ui`. Fotos em `src/lib/fotos.js` (null = espaço marcado).
 
 ### Pacotes listados pelo usuário que **não** foram instalados
 `shadcn-ui/ui`, `radix-ui/primitives`, `dip/cmdk`, `emilkowalski/sonner`, `davidjerleke/embla-carousel`, `clauderic/dnd-kit`, `recharts/recharts`, `storybookjs/storybook`, `floating-ui`, `penpot`, `nextlevelbuilder/ui-ux-pro-max-skill`, etc. — sem caso de uso. `dequelabs/axe-core` + `microsoft/playwright` podem ser adicionados em dev (não no bundle). **Escopo só para este agente**, não afeta outras IAs. Ver vault `[[Skills e repositórios exclusivos deste agente]]`.
@@ -86,6 +86,16 @@ Página própria (`owner.html`, Vite multi-page, `noindex`), **mesmo backend + `
 `server/notify.js`: **`wa.me`**. Ao cancelar/remarcar, backend monta **mensagem pronta** e devolve `notification.waLink` (`https://wa.me/<numero-cliente>?text=...`, número normalizado `+55`, DDD→`55`, mensagem em pt-BR); a guia **redireciona/abre (`window.open`)** e **o dono só toca em enviar**; também botão. **`sent:false`, `mode:'manual_wa.me'`, `reason`**. **NÃO é envio 100% automático; NÃO usa WhatsApp Business API / Meta; sem credenciais; sem template; sem mensagem se cliente sem telefone; número deve ter consentido; nada secreto.**
 
 **Limites honestos:** **sem auth de cliente**, **sem rate-limit**, **sem TLS/deploy**, token do dono simples (`Bearer`, não comparação constante-tempo; use auth real + `OWNER_TOKEN` forte + `ALLOWED_ORIGINS` restrito), **sem e-mail/confirmação**, **sem pagamento**; `node:sqlite` em arquivo (não distribuído); conflito entre clientes **exige o backend no ar**.
+
+## LGPD, termos e acessibilidade
+- **Páginas legais:** `privacidade.html` e `termos.html` (texto em `src/legal/Legal.jsx`). Na prévia viram `#privacidade` e `#termos`.
+- **Dados da empresa:** só em `src/lib/empresa.js` (razão social, CNPJ, endereço, e-mail, canal de privacidade, hospedagem). Tudo entre `[colchetes]` aparece **destacado em amarelo** no site até ser preenchido.
+- **Retenção:** o servidor apaga reservas `BOOKING_RETENTION_DAYS` (padrão `retencaoDias` = 90) dias depois da data do atendimento, ao iniciar e a cada 6 h (`server/retention.js`). O número aparece na política: mude nos dois lugares. A agenda da prévia (artifact) não tem essa limpeza.
+- **Sem cookies, analytics ou pixel.** Se algum dia entrar Google Analytics, Meta Pixel, mapa ou vídeo incorporado, é preciso banner de consentimento **antes** de carregar e atualizar a política.
+- **Formulário:** aviso de uso dos dados + aceite obrigatório dos termos (maior de 18 ou responsável). A base legal do agendamento é execução de contrato (LGPD art. 7º, V), não consentimento.
+- **Fotos:** autorização de uso de imagem por escrito de cada pessoa que aparece (ver `src/lib/fotos.js`).
+- **Acessibilidade:** axe (WCAG 2.2 AA) sem violações em `/`, `/privacidade.html`, `/termos.html` e `/owner.html`, em 390 px e 1280 px; agendamento completo feito só pelo teclado.
+- **Os textos legais são rascunho e precisam de revisão de advogado antes de publicar.** Publicar só com HTTPS.
 
 ## Antes de publicar (placeholders)
 Tudo marcado `PLACEHOLDER` / "Sua foto aqui" / "de exemplo": nome, endereço, **horário/funcionamento**, telefone/WhatsApp, preços/serviços, história, depoimentos, **fotos reais** (trocar `Photo` por `<img>`), redes, mapa, URL canônica/OG, `robots.txt`. **Backend** pra agendamento real. Nenhum dado real inventado.

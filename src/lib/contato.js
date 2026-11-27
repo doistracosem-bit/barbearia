@@ -1,6 +1,6 @@
 // Contato da barbearia: troque o número SÓ aqui.
 // Formato: DDI + DDD + número, só dígitos (ex.: 5511987654321).
-export const TELEFONE = '5511999999999'
+export const TELEFONE = '5516994215925'
 
 const MENSAGEM_INICIAL = 'Olá, gostaria de agendar um horário'
 
