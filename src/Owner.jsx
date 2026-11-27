@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   CalendarDays, ChevronRight, Clock, Download, LayoutGrid, LogOut, MessageCircle,
   RefreshCw, Scissors, Settings, Users,
@@ -83,6 +83,14 @@ function Card({ title, hint, action, children, className = '', bodyClassName = '
 }
 
 function NotificationBanner({ notification, onClose }) {
+  // O link do WhatsApp só abre com um toque do dono: abrir sozinho depois da
+  // resposta do servidor é bloqueado como pop-up (principalmente no celular).
+  // Por isso o foco vai direto para o botão, que fica à vista.
+  const waRef = useRef(null)
+  useEffect(() => {
+    waRef.current?.focus({ preventScroll: true })
+    waRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [notification])
   if (!notification) return null
   return (
     <div className="mb-4 rounded-2xl bg-inkstone p-4 text-white" role="status">
@@ -101,7 +109,7 @@ function NotificationBanner({ notification, onClose }) {
       )}
       <div className="mt-3 flex flex-wrap gap-2">
         {notification.waLink
-          ? <a className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[13px] font-medium text-inkstone hover:opacity-90" href={notification.waLink} target="_blank" rel="noopener"><MessageCircle size={14} aria-hidden="true" /> Abrir WhatsApp e enviar</a>
+          ? <a className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-2 text-[13px] font-medium text-inkstone hover:opacity-90" href={notification.waLink} target="_blank" rel="noopener noreferrer" ref={waRef}><MessageCircle size={14} aria-hidden="true" /> Abrir WhatsApp e enviar</a>
           : <span className="text-[11px] text-white/60">Sem telefone — não há link.</span>}
       </div>
     </div>
@@ -215,7 +223,6 @@ export default function Owner() {
     if (res.ok) {
       setNotice(res.notification)
       setVersion((v) => v + 1)
-      if (res.notification?.waLink) window.open(res.notification.waLink, '_blank', 'noopener')
     } else setError(res.error || 'Falha ao cancelar.')
   }
 
@@ -224,7 +231,6 @@ export default function Owner() {
       setNotice(res.notification)
       setRescheduleId(null)
       setVersion((v) => v + 1)
-      if (res.notification?.waLink) window.open(res.notification.waLink, '_blank', 'noopener')
     } else setError(res.error || 'Falha ao remarcar.')
   }
 
