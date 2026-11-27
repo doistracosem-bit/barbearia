@@ -7,7 +7,7 @@ Landing page de uma barbearia (conteúdo **fictício de exemplo**). **HTML/CSS/J
 - **Tailwind CSS v4** (`@tailwindcss/vite`, `@import "tailwindcss"`, `@theme`)
 - **motion** (`motion/react`, `MotionConfig reducedMotion="user"`)
 - **lucide-react** (ícones monocromáticos, `aria-hidden`)
-- Fontes Google **Inter** (Roobert não carregável; substituto que a referência indica); fallback `system-ui`.
+- Fontes Google **Manrope** (texto) e **Unbounded** (títulos); fallback `system-ui`. Fotos em `src/lib/fotos.js` (null = espaço marcado).
 
 ### Pacotes listados pelo usuário que **não** foram instalados
 `shadcn-ui/ui`, `radix-ui/primitives`, `dip/cmdk`, `emilkowalski/sonner`, `davidjerleke/embla-carousel`, `clauderic/dnd-kit`, `recharts/recharts`, `storybookjs/storybook`, `floating-ui`, `penpot`, `nextlevelbuilder/ui-ux-pro-max-skill`, etc. — sem caso de uso. `dequelabs/axe-core` + `microsoft/playwright` podem ser adicionados em dev (não no bundle). **Escopo só para este agente**, não afeta outras IAs. Ver vault `[[Skills e repositórios exclusivos deste agente]]`.

@@ -7,7 +7,7 @@ const LINKS = [
   ['#servicos', 'Serviços'],
   ['#sobre', 'Sobre'],
   ['#galeria', 'Galeria'],
-  ['#depoimentos', 'Depoimentos'],
+  ['#equipe', 'Equipe'],
   ['#agendar', 'Agendar'],
   ['#contato', 'Contato'],
 ]
@@ -20,37 +20,22 @@ function Logo() {
         <rect x="10" y="4" width="3" height="24" fill="currentColor" />
         <rect x="19" y="4" width="3" height="24" fill="currentColor" />
       </svg>
-      <span>
-        Barbearia <strong className="font-semibold">Raiz</strong>
-      </span>
+      <span className="font-display text-sm font-medium uppercase tracking-[0.12em]">Barbearia Raiz</span>
     </a>
   )
 }
 
 export default function Header() {
   const [open, setOpen] = useState(false)
-  const [onDark, setOnDark] = useState(true)
+  const [scrolled, setScrolled] = useState(false)
   const headerRef = useRef(null)
 
-  // header escuro sobre superfícies escuras
+  // fundo sólido depois que a página rola
   useEffect(() => {
-    const hero = document.querySelector('.hero-iridescent')
-    const onScroll = () => {
-      const h = headerRef.current?.offsetHeight ?? 66
-      let dark = window.scrollY < (hero?.offsetHeight ?? 0) - h
-      if (!dark) {
-        const probe = document.elementFromPoint(window.innerWidth / 2, h + 4)
-        dark = !!probe?.closest('[data-dark-section]')
-      }
-      setOnDark(dark)
-    }
+    const onScroll = () => setScrolled(window.scrollY > 24)
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll, { passive: true })
     onScroll()
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-    }
+    return () => window.removeEventListener('scroll', onScroll)
   }, [])
 
   // Esc + clique fora fecha
@@ -71,14 +56,14 @@ export default function Header() {
   return (
     <header
       ref={headerRef}
-      className={`fixed inset-x-0 top-0 z-50 h-[66px] border-0 bg-transparent ${onDark ? 'text-white' : 'text-black'}`}
+      className={`fixed inset-x-0 top-0 z-50 h-[66px] text-white transition-colors duration-300 ${scrolled || open ? 'border-b border-white/10 bg-coal/90 backdrop-blur' : 'bg-transparent'}`}
     >
-      <div className="mx-auto flex h-full max-w-[1078px] items-center justify-between gap-4 px-5 md:px-10">
+      <div className="mx-auto flex h-full max-w-[1200px] items-center justify-between gap-4 px-5 md:px-10">
         <Logo />
 
         <button
           type="button"
-          className="menu-toggle inline-grid h-11 w-11 place-items-center rounded-none border border-current md:hidden"
+          className="menu-toggle inline-grid h-11 w-11 place-items-center rounded-full border border-white/30 md:hidden"
           aria-expanded={open}
           aria-controls="menu"
           aria-label={open ? 'Fechar menu' : 'Abrir menu'}
@@ -90,7 +75,7 @@ export default function Header() {
         <nav
           id="menu"
           aria-label="Navegação principal"
-          className={`${open ? 'flex' : 'hidden'} absolute inset-x-0 top-full flex-col items-stretch gap-7 border-y border-black/15 bg-white px-5 py-7 text-black md:static md:flex md:flex-row md:items-center md:gap-7 md:border-0 md:bg-transparent md:p-0 md:text-inherit`}
+          className={`${open ? 'flex' : 'hidden'} absolute inset-x-0 top-full flex-col items-stretch gap-7 border-b border-white/10 bg-coal px-5 py-7 text-white md:static md:flex md:flex-row md:items-center md:gap-7 md:border-0 md:bg-transparent md:p-0 md:text-inherit`}
         >
           <ul className="flex flex-col items-stretch gap-0 md:flex-row md:items-center md:gap-7">
             {LINKS.map(([href, label]) => (
@@ -98,7 +83,7 @@ export default function Header() {
                 <a
                   href={href}
                   onClick={() => setOpen(false)}
-                  className="block border-t border-black/10 py-3.5 text-xs font-normal no-underline hover:opacity-60 md:border-0 md:py-1"
+                  className="block border-t border-white/10 py-3.5 text-sm font-medium md:text-xs no-underline hover:opacity-60 md:border-0 md:py-1"
                 >
                   {label}
                 </a>
@@ -110,7 +95,7 @@ export default function Header() {
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
-            className="btn-pill whitespace-nowrap !border-black !text-black md:!border-current md:!text-inherit"
+            className="btn-solid whitespace-nowrap !min-h-10 !px-5 !text-sm"
           >
             Agendar horário
           </a>
