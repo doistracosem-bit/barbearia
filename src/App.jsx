@@ -1,12 +1,10 @@
-import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
+﻿import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
 import Reveal from './components/Reveal.jsx'
 import ScrollIndicator from './components/ScrollIndicator.jsx'
 import Header from './components/Header.jsx'
 import BookingCalendar from './components/BookingCalendar.jsx'
 
-const WA = 'https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20agendar%20um%20hor%C3%A1rio'
-const WA_NUMBER = '5511999999999' // PLACEHOLDER: número real da barbearia
-const WA_SIMPLE = `https://wa.me/${WA_NUMBER}`
+import { WA, WA_SIMPLE, TEL, TELEFONE, TELEFONE_EXIBICAO } from './lib/contato.js'
 
 const SERVICES = [
   ['Corte clássico', 'Máquina e tesoura, acabamento na navalha.', 'R$ 45'],
@@ -164,7 +162,7 @@ export default function App() {
           <div className="mx-auto max-w-[1078px] px-5 md:px-10">
             <Reveal><h2 id="agendar-title" className="text-[clamp(1.75rem,4vw,3rem)] font-light leading-tight">Agende seu horário</h2></Reveal>
             <Reveal delay={0.06}><p className="mt-3 max-w-[60ch] text-felt-gray">Escolha o dia e um horário livre. <strong className="font-semibold">Intervalo de 1 hora</strong>; cada horário só pode ser reservado uma vez.</p></Reveal>
-            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={WA_NUMBER} /></div>
+            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={TELEFONE} /></div>
             <p className="mt-4 text-xs text-felt-gray">
               Assim que você reserva, o horário sai da agenda e aparece para a barbearia.
             </p>
@@ -201,7 +199,7 @@ export default function App() {
               <Reveal delay={0.12} className="!max-w-none">
                 <h3 className="mb-7 flex items-center gap-2 text-lg font-normal text-white"><Phone size={18} aria-hidden="true" /> WhatsApp e telefone</h3>
                 <p><a className="btn-pill !w-full" href={WA} target="_blank" rel="noopener">Agendar no WhatsApp</a></p>
-                <p className="mt-3.5"><a className="btn-pill !w-full" href="tel:+5511999999999">Ligar: (11) 99999-9999</a></p>
+                <p className="mt-3.5"><a className="btn-pill !w-full" href={TEL}>Ligar: {TELEFONE_EXIBICAO}</a></p>
                 <p className="mt-3 text-xs italic text-white/70">Telefone e WhatsApp de exemplo.</p>
               </Reveal>
             </div>
