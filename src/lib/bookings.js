@@ -7,6 +7,7 @@ export * from './slots.js'
 export { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
 import { slotKey } from './slots.js'
 import { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
+import { previewDb, previewTaken, previewCreate } from './agenda-preview.js'
 
 const API_BASE = (import.meta.env?.VITE_API_URL) || 'http://localhost:3001'
 
@@ -49,6 +50,8 @@ async function api(path, options = {}) {
 // horários tomados no intervalo (público, SEM PII) -> Set("YYYY-MM-DDTHH:00")
 // Lança erro se o servidor não responder: sem dados, NÃO dá para dizer que está livre.
 export async function fetchTaken(from, to) {
+  const db = await previewDb() // dentro da prévia (artifact) usa o banco do artifact
+  if (db) return previewTaken(db, from, to)
   const r = await api(`/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
   if (!r.ok || !r.data || !Array.isArray(r.data.taken)) throw new Error('availability_unavailable')
   return new Set(r.data.taken)
@@ -69,6 +72,17 @@ export async function addBooking({ date, time, name, phone, service }) {
   if (!nm.ok) return { ok: false, error: ERR[nm.error] }
   if (!String(phone || '').trim()) return { ok: false, error: ERR.phone_required }
   if (!normalizeBrPhone(phone)) return { ok: false, error: ERR.invalid_phone }
+  const db = await previewDb()
+  if (db) {
+    let out
+    try { out = await previewCreate(db, { date, time, name: nm.value, phone: String(phone).trim(), service: service || '' }) }
+    catch { return { ok: false, error: ERR.network } }
+    if (out.booking) {
+      try { window.dispatchEvent(new CustomEvent('bookings:changed')) } catch { /* */ }
+      return { ok: true, booking: out.booking }
+    }
+    return { ok: false, error: ERR[out.error] || ERR.network }
+  }
   const r = await api('/api/bookings', {
     method: 'POST',
     body: JSON.stringify({ date, time, name: nm.value, phone: String(phone).trim(), service: service || '' }),
