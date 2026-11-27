@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   SLOT_MINUTES,
@@ -218,7 +218,7 @@ export default function BookingCalendar({ services = [] }) {
       </div>
 
       <p className="mt-4 text-xs italic text-felt-gray">
-        PLACEHOLDER: horários/funcionamento de exemplo. Com backend, <strong>não duplica horário entre clientes</strong> (UNIQUE no servidor). Aba do dono (depois) usa <code>GET /api/bookings</code> com token.
+        Cada horário só aceita uma reserva. Horários de funcionamento de exemplo.
       </p>
     </div>
   )

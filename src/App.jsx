@@ -1,4 +1,4 @@
-﻿import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
+import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
 import Reveal from './components/Reveal.jsx'
 import ScrollIndicator from './components/ScrollIndicator.jsx'
 import Header from './components/Header.jsx'
@@ -67,7 +67,7 @@ export default function App() {
 
       <main id="conteudo">
         {/* HERO */}
-        <section className="hero-iridescent hero-reveal flex min-h-[100svh] flex-col items-center justify-center px-5 pb-28 pt-24 text-center text-white md:px-10" aria-labelledby="hero-title">
+        <section id="topo" className="hero-iridescent hero-reveal flex min-h-[100svh] flex-col items-center justify-center px-5 pb-28 pt-24 text-center text-white md:px-10" aria-labelledby="hero-title">
           <div className="mx-auto max-w-[1078px]">
             <h1 id="hero-title" className="mb-7 text-[clamp(2.25rem,5vw,4rem)] font-normal leading-[1.02] tracking-normal text-balance">
               Corte certo.<br />Barba em ponto.
@@ -79,7 +79,7 @@ export default function App() {
               <a className="btn-pill" href={WA} target="_blank" rel="noopener">Agendar no WhatsApp</a>
               <a className="btn-pill" href="#servicos">Ver serviços e preços</a>
             </div>
-            <p className="mt-7 text-xs text-white/70">Agende com ao menos um dia de antecedência. Chegue 5 minutos antes.</p>
+            <p className="mt-7 text-xs text-white/70">Agende pelo site ou pelo WhatsApp. Chegue 5 minutos antes.</p>
           </div>
           <ScrollIndicator />
         </section>
@@ -165,7 +165,7 @@ export default function App() {
             <Reveal delay={0.06}><p className="mt-3 max-w-[60ch] text-felt-gray">Escolha o dia e um horário livre. <strong className="font-semibold">Intervalo de 1 hora</strong>; cada horário só pode ser reservado uma vez.</p></Reveal>
             <div className="mt-8"><BookingCalendar services={SERVICES} /></div>
             <p className="mt-4 text-xs text-felt-gray">
-              Os agendamentos desta página aparecem na hora no <a className="underline underline-offset-2 hover:text-inkstone" href="/owner.html">painel do dono</a>. Dono da barbearia? <a className="underline underline-offset-2 hover:text-inkstone" href="/owner.html">Entrar no painel</a>.
+              Assim que você reserva, o horário sai da agenda e aparece para a barbearia.
             </p>
           </div>
         </section>
@@ -173,7 +173,7 @@ export default function App() {
         {/* CONTATO */}
         <section data-dark-section className="scroll-mt-[4.5rem] border-y border-black/15 bg-black py-[clamp(3.5rem,8vw,6rem)] text-white" id="contato" aria-labelledby="contato-title">
           <div className="mx-auto max-w-[1078px] px-5 md:px-10">
-            <Reveal><h2 id="contato-title" className="text-[clamp(1.75rem,4vw,3rem)] font-light leading-tight text-white">Agende seu horário</h2></Reveal>
+            <Reveal><h2 id="contato-title" className="text-[clamp(1.75rem,4vw,3rem)] font-light leading-tight text-white">Fale com a gente</h2></Reveal>
             <Reveal delay={0.06}><p className="mt-3 max-w-[60ch] text-white/75">Marque pelo WhatsApp. Respondemos rápido.</p></Reveal>
 
             <div className="mt-10 grid gap-10 md:grid-cols-3 md:gap-12">
@@ -193,12 +193,12 @@ export default function App() {
               <Reveal delay={0.06} className="!max-w-none">
                 <h3 className="mb-7 flex items-center gap-2 text-lg font-normal text-white"><MapPin size={18} aria-hidden="true" /> Onde ficamos</h3>
                 <address className="not-italic mb-3 text-white/85">Rua Exemplo, 123<br />[Bairro] — [Cidade]/[UF]<br />CEP 00000-000</address>
-                <p><a className="inline-flex items-center gap-1 border-b border-current pb-px hover:opacity-75" href="https://www.google.com/maps" target="_blank" rel="noopener">Ver no mapa <ArrowRight size={14} aria-hidden="true" /></a></p>
+                <p><a className="inline-flex items-center gap-1 border-b border-current pb-px hover:opacity-75" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Ver no mapa <ArrowRight size={14} aria-hidden="true" /></a></p>
                 <p className="mt-3 text-xs italic text-white/70">Endereço de exemplo.</p>
               </Reveal>
 
               <Reveal delay={0.12} className="!max-w-none">
-                <h3 className="mb-7 flex items-center gap-2 text-lg font-normal text-white"><Phone size={18} aria-hidden="true" /> Fale com a gente</h3>
+                <h3 className="mb-7 flex items-center gap-2 text-lg font-normal text-white"><Phone size={18} aria-hidden="true" /> WhatsApp e telefone</h3>
                 <p><a className="btn-pill !w-full" href={WA} target="_blank" rel="noopener">Agendar no WhatsApp</a></p>
                 <p className="mt-3.5"><a className="btn-pill !w-full" href="tel:+5511999999999">Ligar: (11) 99999-9999</a></p>
                 <p className="mt-3 text-xs italic text-white/70">Telefone e WhatsApp de exemplo.</p>
@@ -224,25 +224,24 @@ export default function App() {
 
           <nav aria-label="Links do rodapé">
             <ul className="grid gap-2">
-              {[['#servicos', 'Serviços'], ['#sobre', 'Sobre'], ['#galeria', 'Galeria'], ['#depoimentos', 'Depoimentos'], ['#agendar', 'Agendar'], ['#contato', 'Contato'], ['/owner.html', 'Painel do dono']].map(([href, label]) => (
-                <li key={href}><a href={href} className="text-[11px] text-felt-gray hover:text-black">{label}</a></li>
+              {[['#servicos', 'Serviços'], ['#sobre', 'Sobre'], ['#galeria', 'Galeria'], ['#depoimentos', 'Depoimentos'], ['#agendar', 'Agendar'], ['#contato', 'Contato']].map(([href, label]) => (
+                <li key={href}><a href={href} className="inline-block py-1 text-xs text-felt-gray hover:text-black">{label}</a></li>
               ))}
             </ul>
           </nav>
 
           <div>
-            <h3 className="mb-3 text-[11px] text-felt-gray">Redes</h3>
+            <h3 className="mb-3 text-xs text-felt-gray">Redes</h3>
             <ul className="grid gap-2">
-              <li><a href="https://www.instagram.com" target="_blank" rel="noopener" className="text-[11px] text-felt-gray hover:text-black">Instagram</a></li>
-              <li><a href={WA_SIMPLE} target="_blank" rel="noopener" className="text-[11px] text-felt-gray hover:text-black">WhatsApp</a></li>
+              <li><a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="inline-block py-1 text-xs text-felt-gray hover:text-black">Instagram</a></li>
+              <li><a href={WA_SIMPLE} target="_blank" rel="noopener noreferrer" className="inline-block py-1 text-xs text-felt-gray hover:text-black">WhatsApp</a></li>
             </ul>
           </div>
         </div>
 
-        <div className="mx-auto mt-12 flex max-w-[1078px] flex-wrap justify-between gap-2 px-5 text-[11px] text-felt-gray md:px-10">
+        <div className="mx-auto mt-12 flex max-w-[1078px] flex-wrap justify-between gap-2 px-5 text-xs text-felt-gray md:px-10">
           <p>© {new Date().getFullYear()} Barbearia Raiz. Todos os direitos reservados.</p>
           <p className="italic">Conteúdo de exemplo — substitua antes de publicar.</p>
-          <a className="hover:text-black" href="/owner.html">Painel do dono</a>
         </div>
       </footer>
     </>
