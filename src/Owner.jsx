@@ -4,6 +4,7 @@ import {
   RefreshCw, Scissors, Settings, Users,
 } from 'lucide-react'
 import { cancelBooking, listBookings, rescheduleBooking } from './lib/bookings.js'
+import { previewDb } from './lib/agenda-preview.js'
 import { dateKey, keyToDate, slotsForDate, todayKey } from './lib/slots.js'
 import OwnerCalendar from './components/OwnerCalendar.jsx'
 
@@ -181,7 +182,10 @@ function StatusBadge({ date, today }) {
 /* ------------------------------------------------------------------ */
 
 export default function Owner() {
-  const [token, setToken] = useState(() => sessionStorage.getItem(TOKEN_KEY) || '')
+  // preview: null = verificando, true = dentro da prévia (artifact), false = site normal
+  const [preview, setPreview] = useState(null)
+  const [token, setToken] = useState(() => { try { return sessionStorage.getItem(TOKEN_KEY) || '' } catch { return '' } })
+  const [confirmCancel, setConfirmCancel] = useState(null)
   const [tokenInput, setTokenInput] = useState(token)
   const [bookings, setBookings] = useState([])
   const [loading, setLoading] = useState(false)
@@ -194,6 +198,15 @@ export default function Owner() {
   const [lastLoadedAt, setLastLoadedAt] = useState(null)
 
   const today = todayKey()
+  const LANDING = preview ? '#' : '/'
+  const AGENDA = preview ? '#agendar' : '/#agendar'
+
+  // na prévia o acesso é o da própria página (só o dono vê os dados); não há token
+  useEffect(() => {
+    let alive = true
+    previewDb().then((db) => { if (!alive) return; setPreview(!!db); if (db) setToken('previa') })
+    return () => { alive = false }
+  }, [])
 
   async function load() {
     if (!token) return
@@ -209,16 +222,19 @@ export default function Owner() {
   function saveToken() {
     const t = tokenInput.trim()
     if (!t) return
-    sessionStorage.setItem(TOKEN_KEY, t)
+    try { sessionStorage.setItem(TOKEN_KEY, t) } catch { /* */ }
     setToken(t); setVersion((v) => v + 1)
   }
   function logout() {
-    sessionStorage.removeItem(TOKEN_KEY)
+    if (preview) { window.location.hash = ''; return } // na prévia, "sair" volta para a landing
+    try { sessionStorage.removeItem(TOKEN_KEY) } catch { /* */ }
     setToken(''); setTokenInput(''); setBookings([]); setView('visao')
   }
 
-  async function onCancel(b) {
-    if (!window.confirm(`Cancelar o horário de ${b.name} em ${b.date} às ${b.time}? O cliente será avisado (você envia no WhatsApp).`)) return
+  // confirmação dentro da página (confirm() não abre dentro da prévia)
+  function onCancel(b) { setConfirmCancel(b); setError(null) }
+  async function doCancel(b) {
+    setConfirmCancel(null)
     const res = await cancelBooking(b.id, token)
     if (res.ok) {
       setNotice(res.notification)
@@ -276,6 +292,9 @@ export default function Owner() {
   const todayLong = longDate(today)
 
   /* ---------------- gate ---------------- */
+  if (preview === null && !token) {
+    return <div className="grid min-h-screen place-items-center bg-[#e7e7e7] p-4 text-sm text-felt-gray">Carregando…</div>
+  }
   if (!token) {
     return (
       <div className="grid min-h-screen place-items-center bg-[#e7e7e7] p-4">
@@ -338,7 +357,7 @@ export default function Owner() {
               <span className="truncate">WhatsApp</span>
               <span className="ml-auto rounded-full bg-black/5 px-1.5 text-[10px] text-felt-gray">manual</span>
             </div>
-            <a href="/#agendar" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
+            <a href={AGENDA} className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
               <CalendarDays size={15} aria-hidden="true" className="shrink-0" />
               <span className="truncate">Agenda pública</span>
               <ChevronRight size={13} aria-hidden="true" className="ml-auto shrink-0" />
@@ -346,7 +365,7 @@ export default function Owner() {
           </div>
 
           <div className="mt-auto grid gap-1 border-t border-black/10 pt-4">
-            <a href="/" className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
+            <a href={LANDING} className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
               <ChevronRight size={15} aria-hidden="true" /> Ver landing page
             </a>
             <button type="button" onClick={logout}
@@ -391,12 +410,24 @@ export default function Owner() {
               <div role="alert" className="mt-4 rounded-xl border border-black/15 bg-black/[0.03] p-3 text-[13px] text-inkstone">
                 <p className="font-medium">⚠ {error}</p>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-felt-gray">
+                  {preview ? 'Na prévia, os agendamentos ficam no banco da própria página e só o dono dela vê nome e WhatsApp dos clientes.' : (<>
                   A landing usa o <strong>mesmo backend</strong>. Confira: backend no ar em <code>{API}</code>;
-                  servidor iniciado com <code>OWNER_TOKEN=&lt;segredo&gt;</code>; token digitado aqui igual ao do servidor; agendamentos no mesmo <code>server/data/bookings.db</code>.
+                  servidor iniciado com <code>OWNER_TOKEN=&lt;segredo&gt;</code>; token digitado aqui igual ao do servidor; agendamentos no mesmo <code>server/data/bookings.db</code>.</>)}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   <button type="button" onClick={() => setVersion((v) => v + 1)} className="rounded-lg border border-black/15 px-3 py-1.5 text-[12px] hover:bg-black/5">Tentar de novo</button>
-                  <button type="button" onClick={logout} className="rounded-lg border border-black/15 px-3 py-1.5 text-[12px] hover:bg-black/5">Trocar token</button>
+                  {!preview && <button type="button" onClick={logout} className="rounded-lg border border-black/15 px-3 py-1.5 text-[12px] hover:bg-black/5">Trocar token</button>}
+                </div>
+              </div>
+            )}
+
+            {confirmCancel && (
+              <div role="alertdialog" aria-labelledby="cc-title" className="mt-4 rounded-xl border border-black/15 bg-white p-3 text-[13px] text-inkstone">
+                <p id="cc-title" className="font-medium">Cancelar o horário de {confirmCancel.name} em {shortDate(confirmCancel.date)} às {confirmCancel.time}?</p>
+                <p className="mt-1 text-[11px] text-felt-gray">O horário volta a ficar livre na agenda. Depois aparece a mensagem pronta para você avisar o cliente no WhatsApp.</p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  <button type="button" autoFocus onClick={() => doCancel(confirmCancel)} className="rounded-lg bg-inkstone px-3 py-1.5 text-[12px] font-medium text-white hover:opacity-90">Sim, cancelar</button>
+                  <button type="button" onClick={() => setConfirmCancel(null)} className="rounded-lg border border-black/15 px-3 py-1.5 text-[12px] hover:bg-black/5">Manter horário</button>
                 </div>
               </div>
             )}
@@ -412,7 +443,7 @@ export default function Owner() {
                     <div className="flex items-start justify-between gap-2">
                       <h2 className="text-[13px] font-medium text-white/75">Visão geral</h2>
                       <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-white/70" aria-live="polite">
-                        {loading ? 'atualizando…' : error ? 'sem conexão' : `conectado · ${API.replace(/^https?:\/\//, '')}`}
+                        {loading ? 'atualizando…' : error ? 'sem conexão' : (preview ? 'prévia · banco da página' : `conectado · ${API.replace(/^https?:\/\//, '')}`)}
                       </span>
                     </div>
                     <p className="mt-3 text-[44px] font-light leading-none tabular-nums">{sorted.length}</p>
@@ -507,7 +538,7 @@ export default function Owner() {
                         ))}
                       </ul>
                     )}
-                    <a href="/#agendar" className="mt-auto flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-[12px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
+                    <a href={AGENDA} className="mt-auto flex items-center justify-between rounded-xl border border-black/10 px-3 py-2 text-[12px] text-felt-gray hover:bg-black/5 hover:text-inkstone">
                       Abrir agenda pública <ChevronRight size={14} aria-hidden="true" />
                     </a>
                   </Card>
@@ -523,10 +554,13 @@ export default function Owner() {
                     {selectedDate && (
                       <button type="button" onClick={() => setSelectedDate(null)} className="rounded-lg border border-black/15 px-2 py-1 text-[11px] text-inkstone hover:bg-black/5">Limpar filtro</button>
                     )}
+{/* a prévia bloqueia downloads; o CSV fica para o site publicado */}
+                    {!preview && (
                     <button type="button" onClick={() => downloadCsv(filtered, `agendamentos-${today}`)} disabled={filtered.length === 0}
                       className="ml-auto inline-flex items-center gap-1.5 rounded-lg border border-black/15 px-2.5 py-1.5 text-[11px] text-inkstone hover:bg-black/5 disabled:opacity-40">
                       <Download size={13} aria-hidden="true" /> Baixar CSV
                     </button>
+                    )}
                   </div>
 
                   {sorted.length === 0 ? (
@@ -627,8 +661,9 @@ export default function Owner() {
             {/* -------- configurações -------- */}
             {view === 'config' && (
               <div className="mt-5 grid gap-3 lg:grid-cols-2">
-                <Card title="Sessão" hint="Token só no navegador (sessionStorage), nunca no repositório.">
+                <Card title="Sessão" hint={preview ? 'Na prévia, o acesso é o da própria página: só o dono vê os dados dos clientes.' : 'Token só no navegador (sessionStorage), nunca no repositório.'}>
                   <dl className="grid gap-2 text-[12px]">
+                    {!preview && (<>
                     <div className="flex items-center justify-between gap-3">
                       <dt className="text-felt-gray">OWNER_TOKEN</dt>
                       <dd className="font-mono text-inkstone">••••••{token.slice(-4)}</dd>
@@ -637,14 +672,15 @@ export default function Owner() {
                       <dt className="text-felt-gray">API</dt>
                       <dd className="truncate font-mono text-[11px] text-inkstone">{API}</dd>
                     </div>
+                    </>)}
                     <div className="flex items-center justify-between gap-3">
                       <dt className="text-felt-gray">Agendamentos</dt>
                       <dd className="tabular-nums text-inkstone">{sorted.length}</dd>
                     </div>
                   </dl>
                   <div className="mt-4 flex flex-wrap gap-2">
-                    <button type="button" onClick={logout} className="rounded-lg bg-inkstone px-3 py-2 text-[13px] font-medium text-white hover:opacity-90">Sair deste navegador</button>
-                    <a href="/" className="rounded-lg border border-black/15 px-3 py-2 text-[13px] text-inkstone hover:bg-black/5">Ver landing page</a>
+                    {!preview && <button type="button" onClick={logout} className="rounded-lg bg-inkstone px-3 py-2 text-[13px] font-medium text-white hover:opacity-90">Sair deste navegador</button>}
+                    <a href={LANDING} className="rounded-lg border border-black/15 px-3 py-2 text-[13px] text-inkstone hover:bg-black/5">Ver landing page</a>
                   </div>
                 </Card>
 

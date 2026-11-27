@@ -7,7 +7,7 @@ export * from './slots.js'
 export { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
 import { slotKey } from './slots.js'
 import { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
-import { previewDb, previewTaken, previewCreate } from './agenda-preview.js'
+import { previewDb, previewTaken, previewCreate, previewList, previewCancel, previewReschedule } from './agenda-preview.js'
 
 const API_BASE = (import.meta.env?.VITE_API_URL) || 'http://localhost:3001'
 
@@ -30,6 +30,9 @@ const ERR = {
   owner_disabled: 'Endpoints do dono desabilitados (defina OWNER_TOKEN no servidor).',
   network: 'Não consegui falar com o servidor. Tente novamente.',
   invalid_range: 'Intervalo inválido.',
+  not_found: 'Agendamento não encontrado. Atualize a lista.',
+  preview_readonly: 'Nesta prévia só quem tem acesso para usar a página consegue reservar.',
+  preview_not_owner: 'Só o dono desta página vê e altera os agendamentos.',
 }
 
 async function api(path, options = {}) {
@@ -96,7 +99,17 @@ export async function addBooking({ date, time, name, phone, service }) {
 }
 
 // ---- dono (depois): exige OWNER_TOKEN ----
+// na prévia (artifact) o dono é reconhecido pelo acesso da página; o token é ignorado
+async function viaPreview(fn) {
+  const db = await previewDb()
+  if (!db) return null
+  try { return await fn(db) } catch { return { error: 'network' } }
+}
+const changed = () => { try { window.dispatchEvent(new CustomEvent('bookings:changed')) } catch { /* */ } }
+
 export async function listBookings(token) {
+  const p = await viaPreview((db) => previewList(db))
+  if (p) return p.error ? { ok: false, error: ERR[p.error] || ERR.network } : { ok: true, bookings: p.bookings }
   const r = await api('/api/bookings', { headers: { Authorization: `Bearer ${token}` } })
   if (!r.ok) return { ok: false, error: ERR[r.data?.error] || ERR.network }
   return { ok: true, bookings: r.data?.bookings || [] }
@@ -114,6 +127,11 @@ export async function removeBooking(id, token) {
 
 // ---- dono: CANCELAR + gerar wa.me (mensagem pronta; o dono envia) ----
 export async function cancelBooking(id, token) {
+  const p = await viaPreview((db) => previewCancel(db, id))
+  if (p) {
+    if (p.error) return { ok: false, error: ERR[p.error] || ERR.network }
+    changed(); return { ok: true, cancelled: p.cancelled, notification: p.notification }
+  }
   const r = await api(`/api/bookings/${encodeURIComponent(id)}/cancel`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },
@@ -125,6 +143,11 @@ export async function cancelBooking(id, token) {
 
 // ---- dono: REMARCAR + gerar wa.me (mensagem pronta; o dono envia) ----
 export async function rescheduleBooking(id, { date, time }, token) {
+  const p = await viaPreview((db) => previewReschedule(db, id, { date, time }))
+  if (p) {
+    if (p.error) return { ok: false, error: ERR[p.error] || ERR.network }
+    changed(); return { ok: true, booking: p.booking, previous: p.previous, notification: p.notification }
+  }
   const r = await api(`/api/bookings/${encodeURIComponent(id)}/reschedule`, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}` },

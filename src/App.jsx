@@ -57,7 +57,8 @@ function Placeholder({ children, dark }) {
   return <p className={`mt-4 text-xs italic ${dark ? 'text-white/50' : 'text-black/50'}`}>{children}</p>
 }
 
-export default function App() {
+// ownerHref: só a prévia passa (link para a área do dono dentro da mesma página)
+export default function App({ ownerHref = null }) {
   return (
     <>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-black">
@@ -309,6 +310,7 @@ export default function App() {
         <div className={`${WRAP} mt-10 flex flex-wrap justify-between gap-2 text-xs`}>
           <p>© {new Date().getFullYear()} Barbearia Raiz</p>
           <p className="italic">Conteúdo de exemplo. Substitua antes de publicar.</p>
+          {ownerHref && <a href={ownerHref} className="underline underline-offset-2 hover:text-white">Área do dono</a>}
         </div>
       </footer>
 

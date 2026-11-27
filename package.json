@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "server": "node --env-file-if-exists=.env server/index.js",
     "dev:server": "node --env-file-if-exists=.env server/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "build:previa": "node scripts/build-previa.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.469.0",
