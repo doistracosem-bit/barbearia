@@ -5,7 +5,8 @@ import Header from './components/Header.jsx'
 import BookingCalendar from './components/BookingCalendar.jsx'
 
 const WA = 'https://wa.me/5511999999999?text=Ol%C3%A1%2C%20gostaria%20de%20agendar%20um%20hor%C3%A1rio'
-const WA_SIMPLE = 'https://wa.me/5511999999999'
+const WA_NUMBER = '5511999999999' // PLACEHOLDER: número real da barbearia
+const WA_SIMPLE = `https://wa.me/${WA_NUMBER}`
 
 const SERVICES = [
   ['Corte clássico', 'Máquina e tesoura, acabamento na navalha.', 'R$ 45'],
@@ -163,7 +164,7 @@ export default function App() {
           <div className="mx-auto max-w-[1078px] px-5 md:px-10">
             <Reveal><h2 id="agendar-title" className="text-[clamp(1.75rem,4vw,3rem)] font-light leading-tight">Agende seu horário</h2></Reveal>
             <Reveal delay={0.06}><p className="mt-3 max-w-[60ch] text-felt-gray">Escolha o dia e um horário livre. <strong className="font-semibold">Intervalo de 1 hora</strong>; cada horário só pode ser reservado uma vez.</p></Reveal>
-            <div className="mt-8"><BookingCalendar services={SERVICES} /></div>
+            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={WA_NUMBER} /></div>
             <p className="mt-4 text-xs text-felt-gray">
               Os agendamentos desta página aparecem na hora no <a className="underline underline-offset-2 hover:text-inkstone" href="/owner.html">painel do dono</a>. Dono da barbearia? <a className="underline underline-offset-2 hover:text-inkstone" href="/owner.html">Entrar no painel</a>.
             </p>

@@ -67,7 +67,7 @@ Scroll reveal `opacity`+`y`, once, stagger, `useReducedMotion`; `MotionConfig re
 - `GET /api/health`
 - `GET /api/availability?from&to` — horários tomados (`YYYY-MM-DDTHH:00`), **sem PII**
 - `GET /api/slots?date` — `{time, available}`
-- `POST /api/bookings` `{date,time,name,phone,service}` — **1h** + funcionamento + não-passado + nome; `201` / `400 invalid_*` / **`409 slot_taken`**
+- `POST /api/bookings` `{date,time,name,phone,service}` — **1h** + funcionamento + não-passado; nome (2+ letras, máx. 80); **WhatsApp obrigatório** (DDD + número BR, salvo como `55…`); `201` / `400 invalid_*` / **`409 slot_taken`** / `409 phone_limit` (máx. `MAX_ACTIVE_PER_PHONE`=2 horários futuros por telefone) / **`429 rate_limited`** (máx. `BOOKING_MAX_PER_IP`=5 tentativas a cada `BOOKING_WINDOW_MIN`=15 min por IP; atrás de proxy defina `TRUST_PROXY=1`) / `413` corpo > 10 KB
 - `GET /api/bookings` — dono, **`Authorization: Bearer <OWNER_TOKEN>`**, `503` sem token, `401` se errado
 - `DELETE /api/bookings/:id` — dono, token
 - `POST /api/bookings/:id/cancel` — dono; **cancela + gera `wa.me`** (mensagem pronta; o dono envia; `sent:false`; **sem Meta**; sem telefone → sem link)

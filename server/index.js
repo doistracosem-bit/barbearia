@@ -8,11 +8,20 @@ import {
   isPastSlot,
   slotKey,
   slotsForDate,
+  todayKey,
 } from './slots.js'
+import { createRateLimiter, clientIp, normalizeBrPhone, cleanName, cleanService } from './guard.js'
 
 const PORT = Number(process.env.PORT || 3001)
 const OWNER_TOKEN = process.env.OWNER_TOKEN || '' // sem token => endpoints do dono desabilitados
 const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || '*').split(',').map((s) => s.trim())
+const TRUST_PROXY = process.env.TRUST_PROXY === '1' // só ligue atrás de proxy/CDN que define X-Forwarded-For
+const BOOKING_MAX_PER_IP = Number(process.env.BOOKING_MAX_PER_IP || 5) // tentativas por janela
+const BOOKING_WINDOW_MIN = Number(process.env.BOOKING_WINDOW_MIN || 15)
+const MAX_ACTIVE_PER_PHONE = Number(process.env.MAX_ACTIVE_PER_PHONE || 2) // horários futuros por telefone
+const BODY_MAX_BYTES = 10_000
+
+const bookingLimiter = createRateLimiter({ windowMs: BOOKING_WINDOW_MIN * 60_000, max: BOOKING_MAX_PER_IP })
 
 // ---------- helpers ----------
 function setCors(req, res) {
@@ -33,8 +42,14 @@ function json(res, status, body) {
 function readBody(req) {
   return new Promise((resolve, reject) => {
     let raw = ''
-    req.on('data', (c) => { raw += c; if (raw.length > 1e6) req.destroy() })
+    let tooBig = false
+    req.on('data', (c) => {
+      if (tooBig) return
+      raw += c
+      if (raw.length > BODY_MAX_BYTES) { tooBig = true; reject(new Error('payload_too_large')) }
+    })
     req.on('end', () => {
+      if (tooBig) return
       if (!raw) return resolve({})
       try { resolve(JSON.parse(raw)) } catch { reject(new Error('invalid_json')) }
     })
@@ -67,12 +82,18 @@ const listStmt = db.prepare(`SELECT id, date, time, name, phone, service, create
 const deleteStmt = db.prepare(`DELETE FROM bookings WHERE id = ?`)
 const getStmt = db.prepare(`SELECT id, date, time, name, phone, service, created_at, slot_minutes FROM bookings WHERE id = ?`)
 const updateStmt = db.prepare(`UPDATE bookings SET date = ?, time = ? WHERE id = ?`)
+const activeByPhoneStmt = db.prepare(`SELECT COUNT(*) AS n FROM bookings WHERE phone = ? AND date >= ?`)
 const slotExistsOtherStmt = db.prepare(`SELECT 1 FROM bookings WHERE date = ? AND time = ? AND id <> ?`)
 
 // DatabaseSync é síncrono; tudo num único tick => sem corrida entre checar e inserir.
 function createBooking({ date, time, name, phone, service }) {
-  const nm = String(name ?? '').trim()
-  if (!nm) return { ok: false, status: 400, error: 'name_required' }
+  const nm = cleanName(name)
+  if (!nm.ok) return { ok: false, status: 400, error: nm.error }
+  if (!String(phone ?? '').trim()) return { ok: false, status: 400, error: 'phone_required' }
+  const ph = normalizeBrPhone(phone)
+  if (!ph) return { ok: false, status: 400, error: 'invalid_phone' }
+  const sv = cleanService(service)
+  if (!sv.ok) return { ok: false, status: 400, error: sv.error }
   if (!isValidDateKey(date)) return { ok: false, status: 400, error: 'invalid_date' }
   if (!isValidSlot(date, time)) return { ok: false, status: 400, error: 'invalid_slot' } // 1h + dentro do funcionamento
   if (isPastSlot(date, time)) return { ok: false, status: 400, error: 'past_slot' }
@@ -80,12 +101,17 @@ function createBooking({ date, time, name, phone, service }) {
   // anti-duplicação explícita…
   if (slotExistsStmt.get(date, time)) return { ok: false, status: 409, error: 'slot_taken' }
 
+  // um telefone não pode segurar a agenda inteira
+  if (activeByPhoneStmt.get(ph, todayKey()).n >= MAX_ACTIVE_PER_PHONE) {
+    return { ok: false, status: 409, error: 'phone_limit' }
+  }
+
   const booking = {
     id: randomUUID(),
     date, time,
-    name: nm,
-    phone: phone ? String(phone).trim() : null,
-    service: service ? String(service).trim() : null,
+    name: nm.value,
+    phone: ph,
+    service: sv.value,
     created_at: new Date().toISOString(),
     slot_minutes: SLOT_MINUTES,
   }
@@ -139,9 +165,18 @@ const server = createServer(async (req, res) => {
 
     // criar agendamento
     if (req.method === 'POST' && path === '/api/bookings') {
+      const limit = bookingLimiter.check(clientIp(req, TRUST_PROXY))
+      if (!limit.ok) {
+        res.setHeader('Retry-After', String(limit.retryAfter))
+        return json(res, 429, { error: 'rate_limited', retryAfter: limit.retryAfter })
+      }
       let body
-      try { body = await readBody(req) } catch { return json(res, 400, { error: 'invalid_json' }) }
-      const r = createBooking(body || {})
+      try { body = await readBody(req) } catch (e) {
+        if (e.message === 'payload_too_large') { res.setHeader('Connection', 'close'); return json(res, 413, { error: 'payload_too_large' }) }
+        return json(res, 400, { error: 'invalid_json' })
+      }
+      if (!body || typeof body !== 'object' || Array.isArray(body)) return json(res, 400, { error: 'invalid_json' })
+      const r = createBooking(body)
       if (!r.ok) return json(res, r.status, { error: r.error })
       return json(res, r.status, { booking: r.booking })
     }
