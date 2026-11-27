@@ -28,8 +28,8 @@ function buildMonthGrid(year, month) {
 }
 
 export default function BookingCalendar({ services = [] }) {
-  const today = startOfDay(new Date())
   const todayK = todayKey()
+  const today = keyToDate(todayK) // hoje em Brasília
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedTime, setSelectedTime] = useState(null)

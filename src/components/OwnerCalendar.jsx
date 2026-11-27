@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { dateKey, keyToDate, slotsForDate, startOfDay, todayKey } from '../lib/slots.js'
+import { dateKey, keyToDate, slotsForDate, todayKey } from '../lib/slots.js'
 
 const WEEKDAYS = ['D', 'S', 'T', 'Q', 'Q', 'S', 'S']
 const WEEKDAYS_LONG = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado']
@@ -19,8 +19,8 @@ function buildMonthGrid(year, month) {
 
 // Calendário do dono: dias com agendamento marcados; clique filtra a lista.
 export default function OwnerCalendar({ bookings = [], selectedDate, onSelect }) {
-  const today = startOfDay(new Date())
   const todayK = todayKey()
+  const today = keyToDate(todayK) // hoje em Brasília
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const cells = useMemo(() => buildMonthGrid(month.getFullYear(), month.getMonth()), [month])
 
