@@ -1,10 +1,10 @@
-import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
+﻿import { Phone, MapPin, Clock, ArrowRight } from 'lucide-react'
 import Reveal from './components/Reveal.jsx'
 import ScrollIndicator from './components/ScrollIndicator.jsx'
 import Header from './components/Header.jsx'
 import BookingCalendar from './components/BookingCalendar.jsx'
 
-import { WA, WA_SIMPLE, TEL, TELEFONE_EXIBICAO } from './lib/contato.js'
+import { WA, WA_SIMPLE, TEL, TELEFONE, TELEFONE_EXIBICAO } from './lib/contato.js'
 
 const SERVICES = [
   ['Corte clássico', 'Máquina e tesoura, acabamento na navalha.', 'R$ 45'],
@@ -162,7 +162,7 @@ export default function App() {
           <div className="mx-auto max-w-[1078px] px-5 md:px-10">
             <Reveal><h2 id="agendar-title" className="text-[clamp(1.75rem,4vw,3rem)] font-light leading-tight">Agende seu horário</h2></Reveal>
             <Reveal delay={0.06}><p className="mt-3 max-w-[60ch] text-felt-gray">Escolha o dia e um horário livre. <strong className="font-semibold">Intervalo de 1 hora</strong>; cada horário só pode ser reservado uma vez.</p></Reveal>
-            <div className="mt-8"><BookingCalendar services={SERVICES} /></div>
+            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={TELEFONE} /></div>
             <p className="mt-4 text-xs text-felt-gray">
               Assim que você reserva, o horário sai da agenda e aparece para a barbearia.
             </p>
