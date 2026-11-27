@@ -4,7 +4,9 @@
 // o frontend também desabilita slots tomados. Sem localStorage.
 
 export * from './slots.js'
+export { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
 import { slotKey } from './slots.js'
+import { NAME_MAX, normalizeBrPhone, cleanName } from './validate.js'
 
 const API_BASE = (import.meta.env?.VITE_API_URL) || 'http://localhost:3001'
 
@@ -14,6 +16,14 @@ const ERR = {
   invalid_date: 'Data inválida.',
   past_slot: 'Esse horário já passou.',
   name_required: 'Informe seu nome.',
+  name_too_long: `Use no máximo ${NAME_MAX} caracteres no nome.`,
+  invalid_name: 'Informe um nome válido.',
+  phone_required: 'Informe seu WhatsApp com DDD.',
+  invalid_phone: 'WhatsApp inválido. Use DDD + número, ex.: (11) 91234-5678.',
+  invalid_service: 'Serviço inválido.',
+  phone_limit: 'Este WhatsApp já tem horários marcados. Fale com a barbearia para remarcar.',
+  rate_limited: 'Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo.',
+  payload_too_large: 'Dados inválidos.',
   invalid_json: 'Dados inválidos.',
   unauthorized: 'Não autorizado.',
   owner_disabled: 'Endpoints do dono desabilitados (defina OWNER_TOKEN no servidor).',
@@ -37,10 +47,11 @@ async function api(path, options = {}) {
 }
 
 // horários tomados no intervalo (público, SEM PII) -> Set("YYYY-MM-DDTHH:00")
+// Lança erro se o servidor não responder: sem dados, NÃO dá para dizer que está livre.
 export async function fetchTaken(from, to) {
   const r = await api(`/api/availability?from=${encodeURIComponent(from)}&to=${encodeURIComponent(to)}`)
-  if (!r.ok || !r.data) return new Set()
-  return new Set(r.data.taken || [])
+  if (!r.ok || !r.data || !Array.isArray(r.data.taken)) throw new Error('availability_unavailable')
+  return new Set(r.data.taken)
 }
 
 // slots de um dia com disponibilidade (servidor)
@@ -54,10 +65,13 @@ export function isSlotKeyTaken(set, date, time) { return set.has(slotKey(date, t
 
 // criar agendamento no servidor; anti-duplicação server-side
 export async function addBooking({ date, time, name, phone, service }) {
-  if (!name || !name.trim()) return { ok: false, error: ERR.name_required }
+  const nm = cleanName(name)
+  if (!nm.ok) return { ok: false, error: ERR[nm.error] }
+  if (!String(phone || '').trim()) return { ok: false, error: ERR.phone_required }
+  if (!normalizeBrPhone(phone)) return { ok: false, error: ERR.invalid_phone }
   const r = await api('/api/bookings', {
     method: 'POST',
-    body: JSON.stringify({ date, time, name: name.trim(), phone: (phone || '').trim(), service: service || '' }),
+    body: JSON.stringify({ date, time, name: nm.value, phone: String(phone).trim(), service: service || '' }),
   })
   if (r.ok && r.data?.booking) {
     try { window.dispatchEvent(new CustomEvent('bookings:changed')) } catch { /* */ }
