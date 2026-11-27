@@ -26,8 +26,11 @@ const bookingLimiter = createRateLimiter({ windowMs: BOOKING_WINDOW_MIN * 60_000
 // ---------- helpers ----------
 function setCors(req, res) {
   const origin = req.headers.origin
-  if (ALLOWED_ORIGINS.includes('*')) res.setHeader('Access-Control-Allow-Origin', '*')
-  else if (origin && ALLOWED_ORIGINS.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin)
+  // Sem ALLOWED_ORIGINS definido, libera só o front local (dev/preview), nunca "*".
+  // "*" só vale se for escrito explicitamente na variável.
+  const allowed = process.env.ALLOWED_ORIGINS ? ALLOWED_ORIGINS : ['http://localhost:5173', 'http://localhost:4173']
+  if (allowed.includes('*')) res.setHeader('Access-Control-Allow-Origin', '*')
+  else if (origin && allowed.includes(origin)) res.setHeader('Access-Control-Allow-Origin', origin)
   res.setHeader('Vary', 'Origin')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,DELETE,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
