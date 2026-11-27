@@ -4,7 +4,7 @@ export default function ScrollIndicator({ href = '#servicos', label = 'ROLE PARA
     <a
       className="scroll-indicator absolute bottom-5 left-4 sm:bottom-9 sm:left-8 inline-grid h-20 w-20 place-items-center rounded-full text-white transition-opacity hover:opacity-70 sm:h-24 sm:w-24"
       href={href}
-      aria-label={`Rolar para os serviços ${text}`}
+      aria-label={`${label}: ir para os serviços`}
     >
       <svg viewBox="0 0 120 120" className="block h-full w-full" aria-hidden="true" focusable="false">
         <defs>

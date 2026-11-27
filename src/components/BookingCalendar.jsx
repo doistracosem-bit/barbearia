@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   SLOT_MINUTES,
@@ -28,8 +28,8 @@ function buildMonthGrid(year, month) {
 }
 
 export default function BookingCalendar({ services = [] }) {
-  const today = startOfDay(new Date())
   const todayK = todayKey()
+  const today = keyToDate(todayK) // hoje em Brasília
   const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1))
   const [selectedDate, setSelectedDate] = useState(null)
   const [selectedTime, setSelectedTime] = useState(null)
@@ -218,7 +218,7 @@ export default function BookingCalendar({ services = [] }) {
       </div>
 
       <p className="mt-4 text-xs italic text-felt-gray">
-        PLACEHOLDER: horários/funcionamento de exemplo. Com backend, <strong>não duplica horário entre clientes</strong> (UNIQUE no servidor). Aba do dono (depois) usa <code>GET /api/bookings</code> com token.
+        Cada horário só aceita uma reserva. Horários de funcionamento de exemplo.
       </p>
     </div>
   )

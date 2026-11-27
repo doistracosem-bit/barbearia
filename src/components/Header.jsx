@@ -10,7 +10,6 @@ const LINKS = [
   ['#depoimentos', 'Depoimentos'],
   ['#agendar', 'Agendar'],
   ['#contato', 'Contato'],
-  ['/owner.html', 'Painel do dono'],
 ]
 
 
@@ -109,7 +108,7 @@ export default function Header() {
           <a
             href={WA}
             target="_blank"
-            rel="noopener"
+            rel="noopener noreferrer"
             onClick={() => setOpen(false)}
             className="btn-pill whitespace-nowrap !border-black !text-black md:!border-current md:!text-inherit"
           >
