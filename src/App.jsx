@@ -5,6 +5,9 @@ import BookingCalendar from './components/BookingCalendar.jsx'
 
 import { WA, WA_SIMPLE, TEL, TELEFONE, TELEFONE_EXIBICAO } from './lib/contato.js'
 import { FOTOS } from './lib/fotos.js'
+import { EMPRESA } from './lib/empresa.js'
+import { Dado } from './legal/Legal.jsx'
+import { ROTAS_SITE } from './legal/rotas.js'
 
 // [nome, descrição, preço]. Preços de exemplo: substitua pelos reais.
 const SERVICES = [
@@ -42,7 +45,7 @@ function Photo({ src, label, className = '', tone = 'dark' }) {
 }
 
 function Eyebrow({ children, dark }) {
-  return <p className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${dark ? 'text-white/55' : 'text-black/50'}`}>{children}</p>
+  return <p className={`mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] ${dark ? 'text-white/55' : 'text-black/60'}`}>{children}</p>
 }
 
 function Heading({ id, children, dark, className = '' }) {
@@ -54,11 +57,12 @@ function Heading({ id, children, dark, className = '' }) {
 }
 
 function Placeholder({ children, dark }) {
-  return <p className={`mt-4 text-xs italic ${dark ? 'text-white/50' : 'text-black/50'}`}>{children}</p>
+  return <p className={`mt-4 text-xs italic ${dark ? 'text-white/50' : 'text-black/60'}`}>{children}</p>
 }
 
 // ownerHref: só a prévia passa (link para a área do dono dentro da mesma página)
-export default function App({ ownerHref = null }) {
+// rotas: endereços das páginas legais (páginas próprias no site, âncoras na prévia)
+export default function App({ ownerHref = null, rotas = ROTAS_SITE }) {
   return (
     <>
       <a href="#conteudo" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:bg-white focus:px-4 focus:py-2 focus:text-black">
@@ -106,7 +110,7 @@ export default function App({ ownerHref = null }) {
               <a href="#lista-servicos" className="link-arrow mt-6">Ver todos os preços <ArrowRight size={16} aria-hidden="true" /></a>
             </Reveal>
 
-            <ul className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0" aria-label="Serviços em destaque">
+            <ul className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-4 md:overflow-visible md:px-0" aria-label="Serviços em destaque" tabIndex={0}>
               {FEATURED.map(([name, desc, price], i) => (
                 <Reveal as="li" key={name} delay={i * 0.06} className="w-[72%] shrink-0 snap-start sm:w-[44%] md:w-auto">
                   <article className="group relative flex aspect-[3/4] flex-col justify-end overflow-hidden rounded-[18px] bg-coal text-white">
@@ -129,7 +133,7 @@ export default function App({ ownerHref = null }) {
                 <li key={name} className="grid grid-cols-[1fr_auto] gap-x-6 border-b border-black/10 py-5">
                   <span className="font-semibold">{name}</span>
                   <span className="row-span-2 self-center font-semibold tabular-nums">{price}</span>
-                  <span className="text-sm text-black/55">{desc}</span>
+                  <span className="text-sm text-black/60">{desc}</span>
                 </li>
               ))}
             </ul>
@@ -190,7 +194,7 @@ export default function App({ ownerHref = null }) {
               <p className="mt-4 max-w-[34ch] text-white/65">Barbeiros que conhecem o ofício e sabem ouvir o que você quer.</p>
               <a className="btn-ghost mt-6 text-white" href={WA} target="_blank" rel="noopener">Agendar com um barbeiro</a>
             </Reveal>
-            <ul className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0">
+            <ul className="-mx-5 flex snap-x snap-mandatory scroll-px-5 gap-3 overflow-x-auto px-5 pb-2 md:mx-0 md:grid md:grid-cols-3 md:overflow-visible md:px-0" aria-label="Barbeiros da equipe" tabIndex={0}>
               {FOTOS.equipe.map((src, i) => (
                 <Reveal as="li" key={i} delay={i * 0.06} className="w-[64%] shrink-0 snap-start sm:w-[40%] md:w-auto">
                   <div className="aspect-[3/4] overflow-hidden rounded-[18px]"><Photo src={src} label={`barbeiro ${i + 1}`} /></div>
@@ -215,8 +219,8 @@ export default function App({ ownerHref = null }) {
                   <div className="flex gap-1 text-black/25" aria-hidden="true">
                     {[0, 1, 2, 3, 4].map((s) => <Star key={s} size={14} />)}
                   </div>
-                  <p className="text-sm text-black/55">Espaço para uma avaliação real do Google, copiada com autorização do cliente.</p>
-                  <p className="mt-auto text-xs font-semibold text-black/45">[Nome do cliente]</p>
+                  <p className="text-sm text-black/60">Espaço para uma avaliação real do Google, copiada com autorização do cliente.</p>
+                  <p className="mt-auto text-xs font-semibold text-black/60">[Nome do cliente]</p>
                 </li>
               ))}
             </ul>
@@ -232,7 +236,7 @@ export default function App({ ownerHref = null }) {
               <Heading id="agendar-title">Escolha seu horário</Heading>
               <p className="mt-4 max-w-[52ch] text-black/65">Escolha o dia e um horário livre. Cada horário só aceita uma reserva e sai da agenda assim que você confirma.</p>
             </Reveal>
-            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={TELEFONE} /></div>
+            <div className="mt-8"><BookingCalendar services={SERVICES} whatsapp={TELEFONE} rotas={rotas} /></div>
           </div>
         </section>
 
@@ -261,9 +265,9 @@ export default function App({ ownerHref = null }) {
 
               <div>
                 <h3 className="mb-5 flex items-center gap-2 font-semibold"><MapPin size={18} aria-hidden="true" /> Endereço</h3>
-                <address className="not-italic text-white/80">Rua Exemplo, 123<br />[Bairro], [Cidade]/[UF]<br />CEP 00000-000</address>
+                <address className="not-italic text-white/80"><Dado>{EMPRESA.endereco}</Dado><br /><Dado>{EMPRESA.bairroCidadeUf}</Dado><br /><Dado>{EMPRESA.cep}</Dado></address>
                 <a className="link-arrow mt-4 text-white" href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">Ver no mapa <ArrowUpRight size={16} aria-hidden="true" /></a>
-                <Placeholder dark>Endereço de exemplo.</Placeholder>
+                <Placeholder dark>Endereço a preencher em src/lib/empresa.js.</Placeholder>
               </div>
 
               <div>
@@ -281,7 +285,7 @@ export default function App({ ownerHref = null }) {
 
       {/* RODAPÉ */}
       <footer data-dark-section className="border-t border-white/10 bg-coal pb-28 pt-14 text-white/60 md:pb-12">
-        <div className={`${WRAP} grid gap-10 md:grid-cols-[1.5fr_1fr_1fr]`}>
+        <div className={`${WRAP} grid gap-10 md:grid-cols-[1.3fr_0.8fr_0.8fr_1.3fr]`}>
           <div>
             <a href="#topo" className="flex items-center gap-2.5 text-white">
               <svg viewBox="0 0 32 32" width="28" height="28" aria-hidden="true" focusable="false">
@@ -300,10 +304,22 @@ export default function App({ ownerHref = null }) {
             </ul>
           </nav>
           <div>
-            <p className="mb-2 text-xs text-white/40">Redes</p>
+            <p className="mb-2 text-xs text-white/60">Redes</p>
             <ul className="grid gap-1">
               <li><a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="inline-block py-1 text-xs hover:text-white">Instagram</a></li>
               <li><a href={WA_SIMPLE} target="_blank" rel="noopener noreferrer" className="inline-block py-1 text-xs hover:text-white">WhatsApp</a></li>
+            </ul>
+          </div>
+          {/* identificação do fornecedor (CDC art. 31; padrão do Decreto 7.962/2013, art. 2º) */}
+          <div className="text-xs leading-relaxed">
+            <p className="mb-2 text-white/60">Empresa</p>
+            <p className="text-white/80">{EMPRESA.nomeFantasia} · <Dado>{EMPRESA.razaoSocial}</Dado></p>
+            <p>CNPJ <Dado>{EMPRESA.cnpj}</Dado></p>
+            <p><Dado>{EMPRESA.endereco}</Dado>, <Dado>{EMPRESA.bairroCidadeUf}</Dado>, <Dado>{EMPRESA.cep}</Dado></p>
+            <p>WhatsApp {TELEFONE_EXIBICAO} · <Dado>{EMPRESA.email}</Dado></p>
+            <ul className="mt-3 grid gap-1">
+              <li><a href={rotas.privacidade} className="inline-block py-1 underline underline-offset-2 hover:text-white">Política de privacidade</a></li>
+              <li><a href={rotas.termos} className="inline-block py-1 underline underline-offset-2 hover:text-white">Termos de uso</a></li>
             </ul>
           </div>
         </div>

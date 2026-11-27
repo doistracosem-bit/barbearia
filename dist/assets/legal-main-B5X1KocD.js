@@ -1,0 +1,1 @@
+import{a as t,j as e,R as r}from"./index-CNS89htH.js";import{d as s,P as a,R as o}from"./latin-ext-500-CNKPuLrV.js";const d=document.body.dataset.doc==="termos"?s:a;t.createRoot(document.getElementById("root")).render(e.jsx(r.StrictMode,{children:e.jsx(d,{homeHref:o.home,links:o})}));
